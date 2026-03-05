@@ -1,6 +1,6 @@
 # OneTap - Accessibility App Launcher
 
-A simple, language-independent app launcher for people who struggle with standard phone interfaces.
+A simple, language-independent app launcher with voice control.
 
 ## Features
 
