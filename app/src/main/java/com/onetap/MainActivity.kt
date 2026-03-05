@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.onetap.service.FloatingButtonService
+import com.onetap.service.BackgroundVoiceService
 import com.onetap.service.VoiceService
 import com.onetap.service.CommandResult
 import com.onetap.service.CommandType
@@ -471,6 +472,46 @@ fun SettingsScreen(
                             } else {
                                 FloatingButtonService.stop(context)
                                 floatingEnabled = false
+                            }
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Background Voice Toggle
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Background Voice",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = "Voice works in every app (like OK Google)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = false,
+                        onCheckedChange = { enabled ->
+                            if (enabled) {
+                                BackgroundVoiceService.start(context)
+                            } else {
+                                BackgroundVoiceService.stop(context)
                             }
                         }
                     )
