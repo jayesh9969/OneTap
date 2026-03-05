@@ -413,16 +413,14 @@ fun SettingsScreen(
             PackageManager.PERMISSION_GRANTED
     }
 
-    // Permission request launcher
-    val permissionLauncher = remember {
-        androidx.activity.compose.rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted ->
-            hasMicPermission = isGranted
-            if (isGranted) {
-                BackgroundVoiceService.start(context)
-                backgroundVoiceEnabled = true
-            }
+    // Permission request launcher - created at the right scope
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasMicPermission = isGranted
+        if (isGranted) {
+            BackgroundVoiceService.start(context)
+            backgroundVoiceEnabled = true
         }
     }
 
