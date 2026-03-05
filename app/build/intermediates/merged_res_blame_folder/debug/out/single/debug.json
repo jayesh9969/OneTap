@@ -1,0 +1,26 @@
+[
+    {
+        "merged": "com.onetap.app-merged_res-47:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.onetap.app-main-49:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.onetap.app-merged_res-47:/layout_floating_button.xml.flat",
+        "source": "com.onetap.app-main-49:/layout/floating_button.xml"
+    },
+    {
+        "merged": "com.onetap.app-merged_res-47:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.onetap.app-main-49:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.onetap.app-merged_res-47:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.onetap.app-main-49:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.onetap.app-merged_res-47:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.onetap.app-main-49:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.onetap.app-merged_res-47:/drawable_floating_button_bg.xml.flat",
+        "source": "com.onetap.app-main-49:/drawable/floating_button_bg.xml"
+    }
+]

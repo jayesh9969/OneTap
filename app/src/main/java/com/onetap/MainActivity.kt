@@ -32,8 +32,8 @@ import androidx.compose.ui.unit.dp
 import com.onetap.service.FloatingButtonService
 import com.onetap.service.BackgroundVoiceService
 import com.onetap.service.VoiceService
-import com.onetap.service.CommandResult
-import com.onetap.service.CommandType
+import com.onetap.service.VoiceService.CommandResult
+import com.onetap.service.VoiceService.CommandType
 import com.onetap.ui.theme.OneTapTheme
 
 class MainActivity : ComponentActivity() {

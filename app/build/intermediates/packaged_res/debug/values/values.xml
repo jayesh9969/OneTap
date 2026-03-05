@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="emergency_red">#FFE53935</color>
+    <color name="icon_background">#FFF5F5F5</color>
+    <color name="icon_background_pressed">#FFE0E0E0</color>
+    <color name="primary">#FF2196F3</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="white">#FFFFFFFF</color>
+    <string name="add_app">Add App</string>
+    <string name="app_name">OneTap</string>
+    <string name="call">Call</string>
+    <string name="camera">Camera</string>
+    <string name="edit_icons">Edit Icons</string>
+    <string name="emergency">Emergency</string>
+    <string name="message">Message</string>
+    <string name="no_apps">No apps configured</string>
+    <string name="phone">Phone</string>
+    <string name="settings">Settings</string>
+    <string name="settings_placeholder">Settings screen coming soon</string>
+    <string name="tap_to_open">Tap to open</string>
+    <string name="whatsapp">WhatsApp</string>
+    <style name="Theme.OneTap" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/primary</item>
+        <item name="android:navigationBarColor">@color/white</item>
+    </style>
+</resources>
