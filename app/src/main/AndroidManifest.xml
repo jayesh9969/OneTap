@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Permission to draw over other apps (for floating button) -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -10,7 +11,7 @@
 
     <!-- Permission to query installed apps -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
-        android:tools:ignore="QueryAllPackagesPermission" />
+        tools:ignore="QueryAllPackagesPermission" />
 
     <!-- Permission for shake detection (vibration) -->
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -38,11 +39,7 @@
             android:name=".service.FloatingButtonService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="accessibility_floating_button" />
-        </service>
+            android:foregroundServiceType="specialUse" />
 
     </application>
 
