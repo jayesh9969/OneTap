@@ -29,6 +29,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.onetap.service.FloatingButtonService
+import com.onetap.service.VoiceService
+import com.onetap.service.CommandResult
+import com.onetap.service.CommandType
 import com.onetap.ui.theme.OneTapTheme
 
 class MainActivity : ComponentActivity() {
@@ -53,6 +56,27 @@ data class QuickApp(
 fun OneTapScreen() {
     val context = LocalContext.current
     var showSettings by remember { mutableStateOf(false) }
+    var isListening by remember { mutableStateOf(false) }
+    var voiceText by remember { mutableStateOf("") }
+
+    // Voice service
+    val voiceService = remember {
+        VoiceService(context).apply {
+            onResult = { result ->
+                isListening = false
+                voiceText = result
+                // Parse and launch
+                val command = parseCommand(result)
+                if (command.packageName != null) {
+                    launchApp(context, command.packageName)
+                }
+            }
+            onError = { error ->
+                isListening = false
+                voiceText = error
+            }
+        }
+    }
 
     // Default apps to show
     val quickApps = remember {
@@ -133,6 +157,24 @@ fun OneTapScreen() {
 
                 Spacer(modifier = Modifier.weight(1f))
 
+                // Voice Button
+                VoiceButton(
+                    isListening = isListening,
+                    voiceText = voiceText,
+                    onClick = {
+                        if (isListening) {
+                            voiceService.stopListening()
+                            isListening = false
+                        } else {
+                            voiceText = ""
+                            voiceService.startListening()
+                            isListening = true
+                        }
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 // Emergency Button
                 EmergencyButton(
                     onClick = {
@@ -211,6 +253,145 @@ fun EmergencyButton(onClick: () -> Unit) {
             style = MaterialTheme.typography.titleMedium
         )
     }
+}
+
+@Composable
+fun VoiceButton(
+    isListening: Boolean,
+    voiceText: String,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Show recognized text
+        if (voiceText.isNotEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Text(
+                    text = "\"$voiceText\"",
+                    modifier = Modifier.padding(12.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        // Voice button
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isListening) Color(0xFFE53935) else MaterialTheme.colorScheme.primary
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Icon(
+                imageVector = if (isListening) Icons.Default.Mic else Icons.Default.MicNone,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = if (isListening) "Listening..." else "Voice Command",
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+        
+        Text(
+            text = "Say: \"Open WhatsApp\", \"Play music\", \"Call mom\"",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+    }
+}
+
+fun parseCommand(speech: String): CommandResult {
+    val lowerSpeech = speech.lowercase()
+    
+    // App patterns
+    val appPatterns = mapOf(
+        "whatsapp" to "com.whatsapp",
+        "message" to "com.android.mms",
+        "messages" to "com.android.mms",
+        "phone" to "com.android.contacts",
+        "call" to "com.android.contacts",
+        "camera" to "com.android.camera",
+        "photo" to "com.google.android.apps.photos",
+        "photos" to "com.google.android.apps.photos",
+        "youtube" to "com.google.android.youtube",
+        "music" to "com.google.android.music",
+        "spotify" to "com.spotify.music",
+        "gaana" to "com.gaana",
+        "jiosaavn" to "com.jio.media.jiobeats",
+        "calculator" to "com.android.calculator2",
+        "settings" to "com.android.settings",
+        "chrome" to "com.android.chrome",
+        "browser" to "com.android.chrome",
+        "maps" to "com.google.android.apps.maps",
+        "calendar" to "com.google.android.calendar",
+        "gmail" to "com.google.android.gm",
+        "mail" to "com.google.android.gm",
+        "instagram" to "com.instagram.android",
+        "facebook" to "com.facebook.katana",
+        "twitter" to "com.twitter.android",
+        "telegram" to "org.telegram.messenger",
+        "zoom" to "us.zoom.videomeetings",
+        "meet" to "com.google.android.apps.tachyon",
+        "paytm" to "com.paytm",
+        "gpay" to "com.google.android.apps.nbu.paisa.user",
+        "phonepe" to "com.phonepe.app",
+        "amazon" to "com.amazon.mShop.android.shopping",
+        "flipkart" to "com.flipkart.android",
+        "vlc" to "org.videolan.vlc",
+        "mx player" to "com.mxtech.videoplayer.ad",
+        "file manager" to "com.estrongs.android.pop",
+        "terminal" to "com.termux"
+    )
+    
+    for ((name, packageName) in appPatterns) {
+        if (lowerSpeech.contains(name)) {
+            return CommandResult(
+                type = CommandType.OPEN_APP,
+                packageName = packageName,
+                displayText = name.replaceFirstChar { it.uppercase() }
+            )
+        }
+    }
+    
+    // Special commands
+    when {
+        lowerSpeech.contains("play") && lowerSpeech.contains("song") -> {
+            return CommandResult(
+                type = CommandType.OPEN_APP,
+                packageName = "com.google.android.music",
+                displayText = "Music"
+            )
+        }
+        lowerSpeech.contains("play") && lowerSpeech.contains("youtube") -> {
+            return CommandResult(
+                type = CommandType.OPEN_APP,
+                packageName = "com.google.android.youtube",
+                displayText = "YouTube"
+            )
+        }
+    }
+    
+    return CommandResult(
+        type = CommandType.UNKNOWN,
+        packageName = null,
+        displayText = speech
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
