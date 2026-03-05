@@ -142,7 +142,7 @@ fun AppPickerScreen(
                             }
                         }
                     )
-                    HorizontalDivider()
+                    Divider()
                 }
             }
         }
