@@ -1,5 +1,6 @@
 package com.onetap
 
+import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -8,7 +9,7 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -403,6 +404,31 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     var floatingEnabled by remember { mutableStateOf(false) }
+    var backgroundVoiceEnabled by remember { mutableStateOf(false) }
+    var hasMicPermission by remember { mutableStateOf(false) }
+
+    // Check permissions
+    fun checkPermissions() {
+        hasMicPermission = context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == 
+            PackageManager.PERMISSION_GRANTED
+    }
+
+    // Permission request launcher
+    val permissionLauncher = remember {
+        androidx.activity.compose.rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            hasMicPermission = isGranted
+            if (isGranted) {
+                BackgroundVoiceService.start(context)
+                backgroundVoiceEnabled = true
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        checkPermissions()
+    }
 
     // Check if overlay permission is granted
     fun hasOverlayPermission(): Boolean {
@@ -500,18 +526,25 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = "Voice works in every app (like OK Google)",
+                            text = if (hasMicPermission) "Voice works in every app" else "Tap to enable",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Switch(
-                        checked = false,
+                        checked = backgroundVoiceEnabled,
                         onCheckedChange = { enabled ->
                             if (enabled) {
-                                BackgroundVoiceService.start(context)
+                                if (hasMicPermission) {
+                                    BackgroundVoiceService.start(context)
+                                    backgroundVoiceEnabled = true
+                                } else {
+                                    // Request microphone permission
+                                    permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                }
                             } else {
                                 BackgroundVoiceService.stop(context)
+                                backgroundVoiceEnabled = false
                             }
                         }
                     )
