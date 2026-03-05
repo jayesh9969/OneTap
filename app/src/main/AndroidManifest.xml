@@ -19,13 +19,6 @@
     <!-- Permission for voice recognition -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <!-- Background voice service -->
-    <service
-        android:name=".service.BackgroundVoiceService"
-        android:enabled="true"
-        android:exported="false"
-        android:foregroundServiceType="microphone" />
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -50,6 +43,13 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse" />
+
+        <!-- Background voice service -->
+        <service
+            android:name=".service.BackgroundVoiceService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
 
     </application>
 
