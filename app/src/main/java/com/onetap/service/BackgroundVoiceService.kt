@@ -165,6 +165,10 @@ class BackgroundVoiceService : Service() {
     fun startListening() {
         Log.d(TAG, "startListening called")
         
+        // Destroy old recognizer if exists
+        speechRecognizer?.destroy()
+        speechRecognizer = null
+        
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
             Log.e(TAG, "Speech recognition not available")
             return
@@ -288,15 +292,36 @@ class BackgroundVoiceService : Service() {
         try {
             val intent = packageManager.getLaunchIntentForPackage(packageName)
             if (intent != null) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-                Log.d(TAG, "Successfully launched: $packageName")
+                intent.addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+                )
+                
+                // Check overlay permission before launching
+                if (android.provider.Settings.canDrawOverlays(this)) {
+                    startActivity(intent)
+                    Log.d(TAG, "Successfully launched: $packageName")
+                } else {
+                    Log.e(TAG, "No overlay permission — requesting...")
+                    requestOverlayPermission()
+                }
             } else {
                 Log.e(TAG, "No launch intent found for: $packageName")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to open app: ${e.message}")
         }
+    }
+
+    private fun requestOverlayPermission() {
+        val intent = Intent(
+            android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            android.net.Uri.parse("package:$packageName")
+        ).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(intent)
     }
 
     override fun onDestroy() {
