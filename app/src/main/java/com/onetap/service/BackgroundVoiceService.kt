@@ -64,10 +64,16 @@ class BackgroundVoiceService : Service() {
         )
         
         fun start(context: android.content.Context) {
+            Log.d(TAG, "Starting background voice service...")
             val intent = Intent(context, BackgroundVoiceService::class.java).apply {
                 action = ACTION_START
             }
-            context.startForegroundService(intent)
+            try {
+                context.startForegroundService(intent)
+                Log.d(TAG, "startForegroundService called successfully")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start service: ${e.message}")
+            }
         }
         
         fun stop(context: android.content.Context) {
@@ -86,14 +92,19 @@ class BackgroundVoiceService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "onStartCommand called with action: ${intent?.action}")
         when (intent?.action) {
             ACTION_START -> {
+                Log.d(TAG, "Starting foreground...")
                 startForeground(NOTIFICATION_ID, createNotification())
+                Log.d(TAG, "Foreground started, notification shown")
             }
             ACTION_LISTEN -> {
+                Log.d(TAG, "Listen action triggered")
                 startListening()
             }
             ACTION_STOP -> {
+                Log.d(TAG, "Stop action triggered")
                 stopListening()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()

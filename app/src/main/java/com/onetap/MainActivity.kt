@@ -411,6 +411,14 @@ fun SettingsScreen(
     fun checkPermissions() {
         hasMicPermission = context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == 
             PackageManager.PERMISSION_GRANTED
+        
+        // Request notification permission on Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != 
+                PackageManager.PERMISSION_GRANTED) {
+                // We'll request this when enabling background voice
+            }
+        }
     }
 
     // Permission request launcher - created at the right scope
@@ -419,6 +427,16 @@ fun SettingsScreen(
     ) { isGranted ->
         hasMicPermission = isGranted
         if (isGranted) {
+            BackgroundVoiceService.start(context)
+            backgroundVoiceEnabled = true
+        }
+    }
+
+    // Notification permission launcher
+    val notificationPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted && hasMicPermission) {
             BackgroundVoiceService.start(context)
             backgroundVoiceEnabled = true
         }
@@ -533,6 +551,14 @@ fun SettingsScreen(
                         checked = backgroundVoiceEnabled,
                         onCheckedChange = { enabled ->
                             if (enabled) {
+                                // Request notification permission on Android 13+
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    if (context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != 
+                                        PackageManager.PERMISSION_GRANTED) {
+                                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                        return@Checkbox
+                                    }
+                                }
                                 if (hasMicPermission) {
                                     BackgroundVoiceService.start(context)
                                     backgroundVoiceEnabled = true
