@@ -556,7 +556,6 @@ fun SettingsScreen(
                                     if (context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != 
                                         PackageManager.PERMISSION_GRANTED) {
                                         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                        return@Checkbox
                                     }
                                 }
                                 if (hasMicPermission) {
