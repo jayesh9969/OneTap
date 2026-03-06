@@ -21,6 +21,7 @@ class BackgroundVoiceService : Service() {
 
     private var speechRecognizer: SpeechRecognizer? = null
     private var isListening = false
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
     
     companion object {
         const val CHANNEL_ID = "onetap_voice_channel"
@@ -101,7 +102,7 @@ class BackgroundVoiceService : Service() {
             }
             ACTION_LISTEN -> {
                 Log.d(TAG, "Listen action triggered")
-                startListening()
+                mainHandler.post { startListening() }
             }
             ACTION_STOP -> {
                 Log.d(TAG, "Stop action triggered")
@@ -133,13 +134,13 @@ class BackgroundVoiceService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Listen action
+        // Listen action - use FLAG_MUTABLE for Android 16+
         val listenIntent = Intent(this, BackgroundVoiceService::class.java).apply {
             action = ACTION_LISTEN
         }
         val listenPendingIntent = PendingIntent.getService(
             this, 1, listenIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         )
 
         val stopIntent = Intent(this, BackgroundVoiceService::class.java).apply {
@@ -147,7 +148,7 @@ class BackgroundVoiceService : Service() {
         }
         val stopPendingIntent = PendingIntent.getService(
             this, 2, stopIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         )
 
         return Notification.Builder(this, CHANNEL_ID)
@@ -220,10 +221,16 @@ class BackgroundVoiceService : Service() {
                 if (!matches.isNullOrEmpty()) {
                     val speech = matches[0].lowercase()
                     Log.d(TAG, "Heard: $speech")
-                    processCommand(speech)
+                    
+                    val matched = processCommand(speech)
+                    
+                    if (!matched) {
+                        startListening()
+                    }
+                    // if matched, don't restart — app is opening
+                } else {
+                    startListening()
                 }
-                // Continue listening
-                startListening()
             }
 
             override fun onPartialResults(partialResults: android.os.Bundle?) {
@@ -241,7 +248,7 @@ class BackgroundVoiceService : Service() {
         }
     }
 
-    private fun processCommand(speech: String) {
+    private fun processCommand(speech: String): Boolean {
         Log.d(TAG, "processCommand called with: $speech")
         val lowerSpeech = speech.lowercase()
         
@@ -259,20 +266,21 @@ class BackgroundVoiceService : Service() {
             if (command.contains(name)) {
                 Log.d(TAG, "Matched app: $name -> $packageName")
                 openApp(packageName)
-                return
+                return true
             }
         }
         
         // Special commands
         when {
-            command.contains("play") && command.contains("song") -> openApp("com.google.android.music")
-            command.contains("play") && command.contains("youtube") -> openApp("com.google.android.youtube")
-            command.contains("play") && command.contains("video") -> openApp("com.google.android.youtube")
-            command.contains("call") -> openApp("com.android.contacts")
-            command.contains("send message") -> openApp("com.whatsapp")
+            command.contains("play") && command.contains("song") -> { openApp("com.google.android.music"); return true }
+            command.contains("play") && command.contains("youtube") -> { openApp("com.google.android.youtube"); return true }
+            command.contains("play") && command.contains("video") -> { openApp("com.google.android.youtube"); return true }
+            command.contains("call") -> { openApp("com.android.contacts"); return true }
+            command.contains("send message") -> { openApp("com.whatsapp"); return true }
         }
         
         Log.d(TAG, "No matching command found for: $command")
+        return false
     }
 
     private fun openApp(packageName: String) {
