@@ -27,6 +27,7 @@ class BackgroundVoiceService : Service() {
         const val NOTIFICATION_ID = 2
         const val ACTION_START = "com.onetap.START_VOICE"
         const val ACTION_STOP = "com.onetap.STOP_VOICE"
+        const val ACTION_LISTEN = "com.onetap.LISTEN"
         
         const val TAG = "BackgroundVoice"
         
@@ -88,6 +89,8 @@ class BackgroundVoiceService : Service() {
         when (intent?.action) {
             ACTION_START -> {
                 startForeground(NOTIFICATION_ID, createNotification())
+            }
+            ACTION_LISTEN -> {
                 startListening()
             }
             ACTION_STOP -> {
@@ -119,19 +122,29 @@ class BackgroundVoiceService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Listen action
+        val listenIntent = Intent(this, BackgroundVoiceService::class.java).apply {
+            action = ACTION_LISTEN
+        }
+        val listenPendingIntent = PendingIntent.getService(
+            this, 1, listenIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val stopIntent = Intent(this, BackgroundVoiceService::class.java).apply {
             action = ACTION_STOP
         }
         val stopPendingIntent = PendingIntent.getService(
-            this, 1, stopIntent,
+            this, 2, stopIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         return Notification.Builder(this, CHANNEL_ID)
-            .setContentTitle("OneTap Voice Active")
-            .setContentText("Say \"Hey OneTap\" + command")
+            .setContentTitle("OneTap Voice")
+            .setContentText("Tap Listen to speak a command")
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setContentIntent(pendingIntent)
+            .addAction(android.R.drawable.ic_btn_speak_now, "Listen", listenPendingIntent)
             .addAction(0, "Stop", stopPendingIntent)
             .setOngoing(true)
             .build()
@@ -184,14 +197,8 @@ class BackgroundVoiceService : Service() {
             
             override fun onError(error: Int) {
                 isListening = false
-                // Restart listening after error
-                if (error != 7) { // NO_MATCH is common, don't restart too aggressively
-                    android.os.Handler(mainLooper).postDelayed({
-                        startListening()
-                    }, 500)
-                } else {
-                    startListening()
-                }
+                Log.e(TAG, "Speech error: $error")
+                // Don't auto-restart - user taps Listen button instead
             }
 
             override fun onResults(results: android.os.Bundle?) {
